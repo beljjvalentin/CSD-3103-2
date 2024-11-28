@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import axios from "axios";
 
 export default function Record() {
   const [form, setForm] = useState({
@@ -41,22 +42,26 @@ export default function Record() {
         return;
       }
       setIsNew(false);
-      const response = await fetch(
-        `http://localhost:5050/users/${params.id.toString()}`
-      );
-      if (!response.ok) {
-        const message = `An error has occurred: ${response.statusText}`;
+      try {
+        const response = await axios.get(`http://localhost:5050/users/${id}`);
+
+        // Handle the response if successful
+        const user = response.data;
+
+        if (!user) {
+          console.warn(`User with id ${id} not found`);
+          navigate("/"); // Redirect to home or another page
+          return;
+        }
+
+        user.dateOfBirth = new Date(user.dateOfBirth).toISOString().split('T')[0];
+        setForm(user);
+
+      } catch (error) {
+        const message = `An error has occurred: ${error.response ? error.response.statusText : error.message}`;
         console.error(message);
-        return;
       }
-      const user = await response.json();
-      if (!user) {
-        console.warn(`User with id ${id} not found`);
-        navigate("/");
-        return;
-      }
-      user.dateOfBirth = new Date(user.dateOfBirth).toISOString().split('T')[0];
-      setForm(user);
+
     }
     fetchData();
     return;
@@ -73,35 +78,34 @@ export default function Record() {
   async function onSubmit(e) {
     e.preventDefault();
     const person = { ...form };
+
     try {
       let response;
+
       if (isNew) {
         // if we are adding a new user we will POST to /users.
-        response = await fetch("http://localhost:5050/users", {
-          method: "POST",
+        response = await axios.post("http://localhost:5050/users", person, {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(person),
         });
       } else {
         // if we are updating a user we will PATCH to /users/:id.
-        console.log("Update user")
-        response = await fetch(`http://localhost:5050/users/${params.id}`, {
-          method: "PATCH",
+        console.log("Update user");
+        response = await axios.patch(`http://localhost:5050/users/${params.id}`, person, {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(person),
         });
       }
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      // Handle successful response if needed
+      console.log('User data successfully saved or updated:', response.data);
+
     } catch (error) {
       console.error('A problem occurred adding or updating a user: ', error);
     } finally {
+      // Reset the form state and navigate
       setForm({
         firstName: "",
         lastName: "",
@@ -404,15 +408,11 @@ export default function Record() {
             color="red"
             type="button"
             onClick={async () => {
-              let res = confirm("Are you sure you want to remove it?")
-              if (res) {
+              if (confirm("Are you sure you want to remove it?")) {
                 try {
-                  const response = await fetch(`http://localhost:5050/users/${params.id}`, {
-                    method: "DELETE",
-                  });
+                  const response = await axios.delete(`http://localhost:5050/users/${params.id}`);
 
-                  if (response.ok) {
-                    alert("Deleted successfully");
+                  if (response.status === 200) {
                     // Redirect to index after successful deletion
                     window.location.href = "/";
                   } else {

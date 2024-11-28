@@ -5,6 +5,7 @@ import { AgGridReact } from "ag-grid-react";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import CustomCellComponent from "./CustomCellComponent.jsx";
+import axios from 'axios';
 
 const AddressCellRenderer = (props) => {
   const { address1, address2 } = props.data; // Access address1 and address2 from props.data
@@ -55,26 +56,25 @@ export default function RecordList() {
   // This method fetches the records from the database.
   useEffect(() => {
     async function getRecords() {
-      const response = await fetch(`http://localhost:5050/users/`);
-      if (!response.ok) {
-        const message = `An error occurred: ${response.statusText}`;
-        console.error(message);
-        return;
+      try {
+        const response = await axios.get('http://localhost:5050/users/');
+        setRecords(response.data);
+      } catch (error) {
+        console.error('An error occurred:', error.message);
       }
-      const records = await response.json();
-      setRecords(records);
     }
     getRecords();
-    return;
   }, [records.length]);
 
   // This method will delete a record
   async function deleteRecord(id) {
-    await fetch(`http://localhost:5050/users/${id}`, {
-      method: "DELETE",
-    });
-    const newRecords = records.filter((el) => el._id !== id);
-    setRecords(newRecords);
+    try {
+      await axios.delete(`http://localhost:5050/users/${id}`);
+      const newRecords = records.filter((el) => el._id !== id);
+      setRecords(newRecords);
+    } catch (error) {
+      console.error("Error deleting record:", error);
+    }
   }
 
   // This following section will display the table with the records of individuals.

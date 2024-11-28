@@ -1,23 +1,23 @@
 import { NavLink } from "react-router-dom";
+import axios from "axios";
 
 export default function Navbar() {
 
   const handleClick = async () => {
     try {
-      const response = await fetch('http://localhost:5050/users/populate', {
-        method: 'POST',
+      const response = await axios.post('http://localhost:5050/users/populate', {}, {
         headers: {
           'Content-Type': 'application/json',
         },
       });
 
-      if (!response.ok) {
+      // Handle the response
+      if (response.status === 200) {
+        window.location.reload();
+        alert(response.data.message); // Success message
+      } else {
         throw new Error('Failed to populate users');
       }
-
-      const data = await response.json();
-      window.location.reload();
-      alert(data.message); // Success message
     } catch (error) {
       console.error('Error:', error);
       alert('Error populating users');
