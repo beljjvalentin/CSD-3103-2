@@ -16,9 +16,9 @@ const CustomCellComponent = (props) => {
         className="inline-flex items-center justify-center whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input
                         text-white bg-red-600 hover:bg-red-500 hover:text-accent-foreground h-9 rounded-md px-3"
         onClick={async() => {
-          if (confirm("Are you sure you want to delete?")) {
+          //if (confirm("Are you sure you want to delete?")) {
             deleteRecord(data._id); // Use the function here
-          }
+          //}
         }}
       >
         Delete

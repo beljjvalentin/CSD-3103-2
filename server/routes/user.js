@@ -6,6 +6,9 @@ import db from "../db/connection.js";
 // This help convert the id from string to ObjectId for the _id.
 import { ObjectId } from "mongodb";
 
+// This will populate database
+import { faker } from '@faker-js/faker';
+
 // router is an instance of the express router.
 // We use it to define our routes.
 // The router will be added as a middleware and will take control of requests starting with path /users.
@@ -94,6 +97,40 @@ router.delete("/:id", async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).send("Error deleting user");
+  }
+});
+
+// Route to generate and insert 10 random user records
+router.post("/populate", async (req, res) => {
+  try {
+    const users = [];
+
+    for (let i = 0; i < 10; i++) {
+      const user = {
+        firstName: faker.person.firstName(),
+        lastName: faker.person.lastName(),
+        dateOfBirth: new Date(faker.date.birthdate()).toISOString().split('T')[0],
+        address1: faker.location.streetAddress(),
+        address2: faker.location.secondaryAddress(),
+        city: faker.location.city(),
+        postalCode: faker.location.zipCode(),
+        country: faker.location.country(),
+        phoneNumber: faker.phone.number(),
+        email: faker.internet.email(),
+        userNotes: faker.lorem.sentence(),
+      };
+
+      users.push(user);
+    }
+
+    // Insert all the users into the database
+    const collection = db.collection("users");
+    let result = await collection.insertMany(users)
+
+    res.status(200).json({ message: "10 random users inserted successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error inserting users", error });
   }
 });
 
